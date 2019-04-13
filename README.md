@@ -1,5 +1,10 @@
-# ufag-rs
-Naive Rust-port of [ufag](https://github.com/sliedes/ufag/tree/46759e14ef12224d065dbcca7bbcf10bff9f651d) based on [this commit](https://github.com/sliedes/ufag/tree/46759e14ef12224d065dbcca7bbcf10bff9f651d).
+# Anagwasm
+
+A naive browser port of [Detegr/ufag-rs](https://github.com/Detegr/ufag-rs) (a naive Rust port of [sliedes/ufag](https://github.com/sliedes/ufag)).
+
+## Usage
+
+Build with `./build.sh`, then run a http server in `pkg/`.
 
 ## License
 

@@ -1,7 +1,13 @@
 [package]
-authors = ["Antti Keränen <detegr@gmail.com>"]
-name = "ufag-rs"
+authors = [
+    "Antti Keränen <detegr@gmail.com>",
+    "Hannu Hartikainen <hannu.hartikainen@gmail.com"]
+name = "anagwasm"
 version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
 fixedbitset = "0.1.8"
+wasm-bindgen = "0.2"

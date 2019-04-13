@@ -1,14 +1,12 @@
+extern crate wasm_bindgen;
 extern crate fixedbitset;
 
 mod anagrams;
-
 mod charbag;
-use charbag::CharBag;
 
+use charbag::CharBag;
 use std::collections::HashMap;
-use std::fs;
-use std::io::{BufReader, BufRead, Write};
-use std::path::Path;
+use wasm_bindgen::prelude::*;
 
 type CharMap = HashMap<char, u8>;
 
@@ -33,29 +31,26 @@ fn generate_charmap(input: &str) -> (CharMap, Vec<char>) {
     (charmap, reverse_charmap)
 }
 
-fn load_dictionary(fname: &Path, cset: &CharBag, cmap: &CharMap) -> (Vec<Vec<String>>, Vec<CharBag>) {
-    let f = fs::File::open(fname).expect("Could not open a file");
-    let reader = BufReader::new(f);
-
+fn load_dictionary(raw_wordlist: Vec<&str>, cset: &CharBag, cmap: &CharMap) -> (Vec<Vec<String>>, Vec<CharBag>) {
     let mut words: Vec<Vec<String>> = vec![];
     let mut charsets = vec![];
     let mut charset_map: HashMap<CharBag, usize> = HashMap::new();
     let mut count = 0;
 
-    let mut lines: Vec<String> = vec![];
+    let mut wordlist: Vec<String> = vec![];
 
-    for line in reader.lines() {
-        let line = line.expect("Invalid UTF-8");
-        if line.is_empty() {
+    for word in raw_wordlist {
+        let word = word.to_string();
+        if word.is_empty() {
             continue;
         }
-        lines.push(line);
+        wordlist.push(word);
     }
 
-    lines.sort_by(|a, b| a.len().cmp(&b.len()).reverse());
+    wordlist.sort_by(|a, b| a.len().cmp(&b.len()).reverse());
 
-    for line in lines {
-        if let Some(cs) = CharBag::from_str(&line[..], cmap) {
+    for word in wordlist {
+        if let Some(cs) = CharBag::from_str(&word[..], cmap) {
             if (cset - &cs).is_some() {
                 if cs.empty() {
                     continue;
@@ -63,9 +58,9 @@ fn load_dictionary(fname: &Path, cset: &CharBag, cmap: &CharMap) -> (Vec<Vec<Str
                 count += 1;
                 if charset_map.contains_key(&cs) {
                     let c = charset_map.get(&cs).unwrap();
-                    words[*c].push(line);
+                    words[*c].push(word);
                 } else {
-                    words.push(vec![line]);
+                    words.push(vec![word]);
                     charsets.push(cs.clone());
                     charset_map.insert(cs, words.len() - 1);
                 }
@@ -76,20 +71,17 @@ fn load_dictionary(fname: &Path, cset: &CharBag, cmap: &CharMap) -> (Vec<Vec<Str
     (words, charsets)
 }
 
-fn output_words(word_idxs: &[usize], words: &[Vec<String>]) {
+fn get_anagrams(word_idxs: &[usize], words: &[Vec<String>]) -> Vec<JsValue> {
     let size = word_idxs.len();
     let mut idxs = vec![0; size];
-
-    let stdout = ::std::io::stdout();
-    let mut out_handle = stdout.lock();
+    let mut anagrams: Vec<JsValue> = Vec::new();
 
     loop {
-        let _ = out_handle.write(words[word_idxs[0]][idxs[0]].as_bytes());
-        for i in 1..size {
-            let _ = out_handle.write(b" ");
-            let _ = out_handle.write(words[word_idxs[i]][idxs[i]].as_bytes());
+        let mut tmp = vec![];
+        for i in 0..size {
+            tmp.push(words[word_idxs[i]][idxs[i]].clone());
         }
-        let _ = out_handle.write(b"\n");
+        anagrams.push(JsValue::from(tmp.join(" ")));
 
         let mut curr = (size - 1) as isize;
         while curr >= 0 {
@@ -105,18 +97,24 @@ fn output_words(word_idxs: &[usize], words: &[Vec<String>]) {
             break;
         }
     }
+
+    anagrams
 }
 
-fn main() {
-    let dict_path = std::env::args().nth(1).unwrap();
-    let input = std::env::args().nth(2).unwrap();
+#[wasm_bindgen]
+pub fn create_anagrams(input: &str) -> Vec<JsValue> {
+    let wordlist: Vec<&str> = include_str!("../resources/kotus_sanat.txt").lines().collect();
+
     let lowercased = input.to_lowercase();
     let (charmap, _reverse_charmap) = generate_charmap(&lowercased[..]);
     let input_charset = CharBag::from_str(&lowercased[..], &charmap).expect("input_charset");
-    let (dict_words, dict_charsets) = load_dictionary(&Path::new(&dict_path), &input_charset, &charmap);
+    let (dict_words, dict_charsets) = load_dictionary(wordlist, &input_charset, &charmap);
 
-    anagrams::for_all_anagrams(&dict_charsets, &input_charset, 3 /* len */, move |word_idxs| {
+    let mut anagrams: Vec<JsValue> = Vec::new();
+    anagrams::for_all_anagrams(&dict_charsets, &input_charset, 3 /* len */, |word_idxs| {
         assert!(!word_idxs.is_empty());
-        output_words(word_idxs, &dict_words);
+        anagrams.append(&mut get_anagrams(word_idxs, &dict_words));
     });
+
+    anagrams
 }

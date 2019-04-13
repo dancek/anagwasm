@@ -1,0 +1,44 @@
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</head>
+<body>
+  <h1>Anagwasm</h1>
+
+  <p>This is a hacky port of <a href="https://github.com/Detegr/ufag-rs">Detegr/ufag-rs</a>
+  for browsers. It comes with the Finnish word list compiled in the .wasm.</p>
+
+  <p>The original algorithm design is from <a href="https://github.com/sliedes/ufag">sliedes/ufag</a>.</p>
+
+  <input
+    type="text"
+    id="in"
+    placeholder="Anagram input"
+    style="width: 100%"
+    disabled/>
+  <pre id="out"></pre>
+
+  <script type="module">
+      import { create_anagrams, default as init } from "./anagwasm.js"
+
+      let inputField = document.getElementById("in")
+
+      function maybeGenerate(event) {
+        if (event.keyCode != 13) return
+
+        let input = inputField.value
+        let anagrams = create_anagrams(input)
+        document.getElementById("out").innerText = anagrams.join("\n")
+      }
+
+      async function load() {
+        await init('./anagwasm_bg.wasm')
+
+        inputField.removeAttribute("disabled")
+        inputField.onkeydown = maybeGenerate
+      }
+
+      load()
+    </script>
+  </body>
+</html>
