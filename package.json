@@ -1,0 +1,16 @@
+{
+  "name": "anagwasm",
+  "collaborators": [
+    "Antti Keränen <detegr@gmail.com>",
+    "Hannu Hartikainen <hannu.hartikainen@gmail.com"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "anagwasm_bg.wasm",
+    "anagwasm.js",
+    "anagwasm.d.ts"
+  ],
+  "module": "anagwasm.js",
+  "types": "anagwasm.d.ts",
+  "sideEffects": "false"
+}
