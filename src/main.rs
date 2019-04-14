@@ -44,11 +44,19 @@ fn load_dictionary(fname: &Path, cset: &CharBag, cmap: &CharMap) -> (Vec<Vec<Str
     let mut charset_map: HashMap<CharBag, usize> = HashMap::new();
     let mut count = 0;
 
+    let mut lines: Vec<String> = vec![];
+
     for line in reader.lines() {
         let line = line.expect("Invalid UTF-8");
         if line.is_empty() {
             continue;
         }
+        lines.push(line);
+    }
+
+    lines.sort_by(|a, b| a.len().cmp(&b.len()).reverse());
+
+    for line in lines {
         if let Some(cs) = CharBag::from_str(&line[..], cmap) {
             if (cset - &cs).is_some() {
                 if cs.empty() {
