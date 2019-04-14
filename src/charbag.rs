@@ -25,8 +25,7 @@ impl CharBag {
         self.svec.is_empty()
     }
 
-    pub fn from_str(input: &str, charmap: &CharMap) -> Option<CharBag> {
-        let lowercased = input.to_lowercase();
+    pub fn from_str(lowercased: &str, charmap: &CharMap) -> Option<CharBag> {
         let mut v = Vec::new();
         for c in filter_alphabetic(&lowercased[..]) {
             if let Some(i) = charmap.get(&c) {

@@ -1,4 +1,4 @@
-#![feature(conservative_impl_trait)]
+// #![feature(conservative_impl_trait)]
 
 extern crate fixedbitset;
 
@@ -44,11 +44,19 @@ fn load_dictionary(fname: &Path, cset: &CharBag, cmap: &CharMap) -> (Vec<Vec<Str
     let mut charset_map: HashMap<CharBag, usize> = HashMap::new();
     let mut count = 0;
 
+    let mut lines: Vec<String> = vec![];
+
     for line in reader.lines() {
         let line = line.expect("Invalid UTF-8");
         if line.is_empty() {
             continue;
         }
+        lines.push(line);
+    }
+
+    lines.sort_by(|a, b| a.len().cmp(&b.len()).reverse());
+
+    for line in lines {
         if let Some(cs) = CharBag::from_str(&line[..], cmap) {
             if (cset - &cs).is_some() {
                 if cs.empty() {
@@ -104,8 +112,9 @@ fn output_words(word_idxs: &[usize], words: &[Vec<String>]) {
 fn main() {
     let dict_path = std::env::args().nth(1).unwrap();
     let input = std::env::args().nth(2).unwrap();
-    let (charmap, _reverse_charmap) = generate_charmap(&input[..]);
-    let input_charset = CharBag::from_str(&input[..], &charmap).expect("input_charset");
+    let lowercased = input.to_lowercase();
+    let (charmap, _reverse_charmap) = generate_charmap(&lowercased[..]);
+    let input_charset = CharBag::from_str(&lowercased[..], &charmap).expect("input_charset");
     let (dict_words, dict_charsets) = load_dictionary(&Path::new(&dict_path), &input_charset, &charmap);
 
     anagrams::for_all_anagrams(&dict_charsets, &input_charset, 3 /* len */, move |word_idxs| {
