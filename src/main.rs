@@ -1,4 +1,4 @@
-#![feature(conservative_impl_trait)]
+// #![feature(conservative_impl_trait)]
 
 extern crate fixedbitset;
 
@@ -104,8 +104,9 @@ fn output_words(word_idxs: &[usize], words: &[Vec<String>]) {
 fn main() {
     let dict_path = std::env::args().nth(1).unwrap();
     let input = std::env::args().nth(2).unwrap();
-    let (charmap, _reverse_charmap) = generate_charmap(&input[..]);
-    let input_charset = CharBag::from_str(&input[..], &charmap).expect("input_charset");
+    let lowercased = input.to_lowercase();
+    let (charmap, _reverse_charmap) = generate_charmap(&lowercased[..]);
+    let input_charset = CharBag::from_str(&lowercased[..], &charmap).expect("input_charset");
     let (dict_words, dict_charsets) = load_dictionary(&Path::new(&dict_path), &input_charset, &charmap);
 
     anagrams::for_all_anagrams(&dict_charsets, &input_charset, 3 /* len */, move |word_idxs| {
