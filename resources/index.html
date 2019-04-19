@@ -1,41 +1,89 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    #in {
+      display: none;
+      width: 100%;
+      margin: 1rem 0;
+    }
+    #out {
+      white-space: pre-line;
+    }
+
+    #loading {
+      margin: 2rem;
+    }
+    #loading > .spinner {
+      display: inline-block;
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      border: 4px solid transparent;
+      border-top-color: #666;
+      animation: 1s rotate linear infinite;
+    }
+    @keyframes rotate {
+      to { transform: rotate(360deg) }
+    }
+  </style>
 </head>
 <body>
-  <h1>Anagwasm</h1>
+  <h1>Anag<em>wasm</em></h1>
 
   <p>This is a hacky port of <a href="https://github.com/Detegr/ufag-rs">Detegr/ufag-rs</a>
   for browsers. It comes with the Finnish word list compiled in the .wasm.</p>
 
   <p>The original algorithm design is from <a href="https://github.com/sliedes/ufag">sliedes/ufag</a>.</p>
 
+  <hr/>
+
   <input
     type="text"
     id="in"
-    placeholder="Anagram input"
-    style="width: 100%"
-    disabled/>
-  <pre id="out"></pre>
+    placeholder="Anagram input"/>
+
+  <div id="out">Starting up...</div>
+  <div id="loading"><div class="spinner"></div></div>
 
   <script type="module">
       import { create_anagrams, default as init } from "./anagwasm.js"
 
       let inputField = document.getElementById("in")
+      let output = document.getElementById("out")
+      let loading = document.getElementById("loading")
+
+      function setLoading(text) {
+        output.innerText = text
+        loading.style.display = "block"
+      }
+
+      function setOutput(text) {
+        output.innerText = text
+        loading.style.display = "none"
+      }
 
       function maybeGenerate(event) {
         if (event.keyCode != 13) return
 
+        setLoading("Generating anagrams...")
+        let start = Date.now()
         let input = inputField.value
         let anagrams = create_anagrams(input)
-        document.getElementById("out").innerText = anagrams.join("\n")
+        setOutput(
+          `${anagrams.length} anagrams in ${Date.now() - start}ms.
+
+          ${anagrams.join("\n")}`)
       }
 
       async function load() {
+        setLoading("Loading WebAssembly code...")
         await init('./anagwasm_bg.wasm')
 
-        inputField.removeAttribute("disabled")
+        setOutput("")
+        inputField.style.display = "block"
         inputField.onkeydown = maybeGenerate
+        inputField.focus()
       }
 
       load()
